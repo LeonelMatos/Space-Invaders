@@ -43,9 +43,9 @@ void update(uint32_t time) {
 
     //player movement
     if (buttons & Button::DPAD_LEFT)
-        game.player.pos.x = std::max(0, game.player.pos.x -2);
+        game.player.pos.x = std::clamp(game.player.pos.x - 2L, 0L, 304L); //left
     if (buttons & Button::DPAD_RIGHT)
-        game.player.pos.x = std::min(320-16, game.player.pos.x + 2);
+        game.player.pos.x = std::clamp(game.player.pos.x + 2L, 0L, 304L); //right
 
     //fire
     if ((buttons.pressed & Button::A) && !game.bullets[0].active) {
