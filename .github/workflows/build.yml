@@ -111,7 +111,7 @@ jobs:
       if: runner.os == 'macOS'
       run: |
         brew install ${{matrix.brew-packages}} --break-system-packages
-        python3 -m pip install 32blit
+        python3 -m pip install 32blit --break-system-packages
 
     # Windows dependencies
     - name: Install Windows deps
