@@ -5,33 +5,77 @@ using namespace blit;
 
 static Surface *invaders_sheet = Surface::load(sprites_invaders);
 
-static const Rect SRC_SHIP   { 0,   0, 11, 8 };
-static const Rect SRC_ALIEN { 11,  0, 11, 8 };
+static const int SHEET_W = invaders_sheet->bounds.w;
+static const int SHEET_H = invaders_sheet->bounds.h;
+static const int COLS = 3;
+static const int ROWS = 3;
+static const int CELL_W = SHEET_W / COLS;
+static const int CELL_H = SHEET_H / ROWS;
+
+Rect cell_rect(int col, int row) {
+    return Rect(
+        col * CELL_W,
+        row * CELL_H,
+        CELL_W,
+        CELL_H
+    );
+}
+
+static const Rect SRC_PLAYER  = cell_rect(0, 0);
+
+static const Rect SRC_A0_F0   = cell_rect(1, 0);
+static const Rect SRC_A0_F1   = cell_rect(2, 0);
+
+static const Rect SRC_A1_F0   = cell_rect(1, 1);
+static const Rect SRC_A1_F1   = cell_rect(2, 1);
+
+static const Rect SRC_A2_F0   = cell_rect(1, 2);
+static const Rect SRC_A2_F1   = cell_rect(2, 2);
+
 
 
 void init() {
     set_screen_mode(ScreenMode::hires);
 
-    game.player.pos = { 160 - 8, 210 };
+    game.player.pos = { 160 - CELL_W/2, 210 };
 
-    for (int y = 0; y < 5; y++)
-        for (int x = 0; x < 11; x++)
-            game.invaders[y * 11 + x].pos = { 20 + x *24, 20 + y * 16 };
+    for (int y=0; y<5; y++) {
+        uint8_t row_type;
+        if (y == 0)      row_type = 2;
+        else if (y <= 2) row_type = 1;
+        else             row_type = 0;
+
+        for (int x=0; x<11; x++) {
+            auto &inv = game.invaders[y * 11 + x];
+            inv.pos = { 20 + x * 24, 20 + y * 16 };
+            inv.type = row_type;
+        }
+    }
 }
 
 void render(uint32_t time) {
     screen.pen = Pen(0, 0, 0);
     screen.clear();
 
-
-    screen.blit(invaders_sheet, SRC_SHIP, game.player.pos);
+    screen.blit(invaders_sheet, SRC_PLAYER, game.player.pos);
+    
+    //Invaders
+    int frame = (time / 300) % 2;
 
     for(auto &inv : game.invaders) {
         if (!inv.alive) continue;
-        
-        screen.blit(invaders_sheet, SRC_ALIEN, inv.pos);
-    }
+    
+        const Rect *src = nullptr;
 
+        switch(inv.type) {
+            case 0: src = (frame==0 ? &SRC_A0_F0 : &SRC_A0_F1); break;
+            case 1: src = (frame==0 ? &SRC_A1_F0 : &SRC_A1_F1); break;
+            case 2: src = (frame==0 ? &SRC_A2_F0 : &SRC_A2_F1); break;
+        }
+    
+        screen.blit(invaders_sheet, *src, inv.pos);
+    }
+    //Bullets
     screen.pen = Pen(255, 255, 0);
     for(auto &b : game.bullets)
         if(b.active)

@@ -11,6 +11,7 @@ struct Player {
 struct Invader {
   Point   pos;
   bool    alive{ true };
+  uint8_t type; //0,1,2
 };
 
 struct Bullet {
