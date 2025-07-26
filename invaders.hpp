@@ -24,5 +24,6 @@ struct Game {
     std::array<Invader, 55> invaders;
     std::array<Bullet, 4> bullets;
     uint32_t last_move_time{ 0 };
+    uint32_t score{ 0 };
     int direction{ 1 }; //1=right -1=left
 } game;

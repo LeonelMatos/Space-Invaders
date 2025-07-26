@@ -7,3 +7,5 @@ assets.cpp:
     name: asset_no_image
   assets/invaders.png:
     name: sprites_invaders
+  assets/digits.png:
+    name: sprite_digits
