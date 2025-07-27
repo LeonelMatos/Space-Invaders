@@ -43,6 +43,7 @@ static const uint16_t SCORE_TABLE[4] {
     150
 };
 
+//INIT//
 void init() {
     set_screen_mode(ScreenMode::hires);
 
@@ -58,6 +59,7 @@ void init() {
             auto &inv = game.invaders[y * 11 + x];
             inv.pos = { 20 + x * 24, 20 + y * 16 };
             inv.type = row_type;
+            inv.col = x;
         }
     }
 }
@@ -90,6 +92,20 @@ void draw_score() {
     screen.text(buf, space_font, num_pos, false, TextAlign::top_left);
 }
 
+void draw_enemy_bullets(uint32_t time) {
+    int phase = (time / 200) & 1;
+    screen.pen = Pen(255, 255, 255);
+    for(auto &eb : game.enemy_bullets) {
+        if(!eb.active) continue;
+        int x = eb.pos.x, y = eb.pos.y;
+        
+        screen.pixel(Point(x, y));
+        screen.pixel(Point(x + (phase ? 1 : -1), y + 2));
+        screen.pixel(Point(x, y + 4));
+    }
+}
+
+//RENDER//
 void render(uint32_t time) {
     screen.pen = Pen(0, 0, 0);
     screen.clear();
@@ -100,19 +116,20 @@ void render(uint32_t time) {
     int frame = (time / 300) % 2;
     draw_invaders(frame);
 
-    //Bullets
-    screen.pen = Pen(255, 255, 0);
+    //PLAYER Bullets
+    screen.pen = Pen(255, 255, 255);
     for(auto &b : game.bullets)
         if(b.active)
             screen.rectangle(Rect(b.pos.x, b.pos.y, 2, 4));
 
+    draw_enemy_bullets(time);
+    
     //Score
     draw_score();
     
 }
 
-void update(uint32_t time) {
-
+void handle_player() {
     //player movement
     if (buttons & Button::DPAD_LEFT)
         game.player.pos.x = std::clamp(game.player.pos.x - 2L, 0L, 304L); //left
@@ -124,19 +141,85 @@ void update(uint32_t time) {
         for (auto &b : game.bullets) {
             if (!b.active) {
                 b.active = true;
-                b.pos = game.player.pos + Point(8, -4);
+                b.pos = game.player.pos + Point(5, -4);
                 break;
             }
         }
     }
+}
 
-    //move bullets
+void bullets_physics(uint32_t time) {
+    int player_bullet_speed = 4;
+    int enemy_bullet_speed = 2;
+    //Moving PLAYER bullets
     for(auto &b : game.bullets) {
         if(b.active) {
-            b.pos.y -= 4;
+            b.pos.y -= player_bullet_speed;
             if(b.pos.y < 0) b.active = false;
         }
     }
+    //ENEMY bullets
+    static uint32_t last_enemy_shot = 0;
+    constexpr int shoot_freq_ms = 800;
+    if(time - last_enemy_shot > shoot_freq_ms) {
+        last_enemy_shot = time;
+        //find the lowest invader in each column (the ones that can shoot)
+        Invader *lowest[11] = { nullptr };
+    
+        for (auto &inv : game.invaders) {
+            if(!inv.alive) continue;
+            int c = inv.col;
+            lowest[c] = &inv;
+        }
+        
+        int cols[11], cols_count = 0; 
+        for(int c = 0; c < 11; c++)
+            if(lowest[c]) cols[cols_count++] = c;
+        
+        if(cols_count > 0) { //pick random column
+            int rnd = cols[ blit::random() % cols_count ];
+            Invader &shooter = *lowest[rnd];
+            
+            for(auto &eb : game.enemy_bullets) {
+                if(!eb.active) {
+                    eb.active = true;
+                    eb.pos = shooter.pos + Point(CELL_W/2, CELL_H);
+                    break;
+                }
+            }
+        }
+
+        for (auto &eb : game.enemy_bullets) {
+            if(!eb.active) continue;
+            eb.pos.y += enemy_bullet_speed;
+            if(eb.pos.y > screen.bounds.h)
+                eb.active = false;
+        }
+    }
+}
+
+void handle_collisions() {
+    //collision: bullets at aliens
+    for(auto &b : game.bullets) {
+        if(!b.active) continue;
+        for(auto &inv : game.invaders) {
+            if(inv.alive && Rect(inv.pos, Size(16,8)).contains(b.pos)) {
+                inv.alive = false;
+                b.active = false;
+
+                if (inv.type < 3) {
+                    game.score += SCORE_TABLE[inv.type];
+                }
+                break;
+            }
+        }
+    }
+}
+
+//UPDATE//
+void update(uint32_t time) {
+
+    handle_player();
 
     if(time - game.last_move_time > 500) {
     // check if any edge of the fleet would hit the screen edge
@@ -164,22 +247,9 @@ void update(uint32_t time) {
     game.last_move_time = time;
     }
 
-    //collision: bullets at aliens
-    for(auto &b : game.bullets) {
-        if(!b.active) continue;
-        for(auto &inv : game.invaders) {
-            if(inv.alive && Rect(inv.pos, Size(16,8)).contains(b.pos)) {
-                inv.alive = false;
-                b.active = false;
+    bullets_physics(time);
 
-                if (inv.type < 3) {
-                    game.score += SCORE_TABLE[inv.type];
-                }
-                break;
-            }
-        }
-    }
-
+    handle_collisions();
 
 
 }
