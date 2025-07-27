@@ -33,4 +33,6 @@ struct Game {
     uint32_t last_move_time{ 0 };
     uint32_t score{ 0 };
     int direction{ 1 }; //1=right -1=left
+    int lives{3};
+    bool game_over{false};
 } game;

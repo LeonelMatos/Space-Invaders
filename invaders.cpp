@@ -43,10 +43,7 @@ static const uint16_t SCORE_TABLE[4] {
     150
 };
 
-//INIT//
-void init() {
-    set_screen_mode(ScreenMode::hires);
-
+void setup_level() {
     game.player.pos = { 160 - CELL_W/2, 210 };
 
     for (int y=0; y<5; y++) {
@@ -60,8 +57,15 @@ void init() {
             inv.pos = { 20 + x * 24, 20 + y * 16 };
             inv.type = row_type;
             inv.col = x;
+            inv.alive = true;
         }
     }
+}
+
+//INIT//
+void init() {
+    set_screen_mode(ScreenMode::hires);
+    setup_level();
 }
 
 void draw_invaders(int frame) {
@@ -105,10 +109,44 @@ void draw_enemy_bullets(uint32_t time) {
     }
 }
 
+void draw_lives() {
+    screen.pen = Pen(255,255,255);
+
+    const char *label = "LIVES";
+    int fh = space_font.char_h; //font height
+    int pad = 10;
+    
+    int x0 = (screen.bounds.w / 2), y0 = 4;
+
+    screen.text(label, space_font, Point(x0, y0), false, TextAlign::top_left);
+
+    Point p{ x0, y0 + space_font.char_h + 2 };
+    for (int i = 0; i < game.lives; i++) {
+        screen.blit(invaders_sheet, SRC_PLAYER, p);
+        p.x += CELL_W + 4;
+    }
+}
+
+void draw_game_over() {
+    std::string msg = "GAME OVER";
+    screen.pen = Pen(255,255,255);
+
+    int text_h = space_font.char_h;
+    int y = (screen.bounds.h - text_h) / 2;
+    Rect r{ 0, y, screen.bounds.w, text_h };
+    screen.text(msg, space_font, r, false, TextAlign::center_h);
+}
+
 //RENDER//
 void render(uint32_t time) {
     screen.pen = Pen(0, 0, 0);
     screen.clear();
+
+    if(game.game_over) {
+        draw_game_over();
+        draw_score();
+        return;
+    }
 
     if(game.player.alive)
         screen.blit(invaders_sheet, SRC_PLAYER, game.player.pos);
@@ -127,6 +165,7 @@ void render(uint32_t time) {
     
     //Score
     draw_score();
+    draw_lives();
     
 }
 
@@ -219,13 +258,35 @@ void handle_collisions() {
         if(!eb.active) continue;
         if(player_rect.contains(eb.pos)) {
             eb.active = false;
-            game.player.alive = false;
+            game.lives--;
+            if(game.lives > 0) {
+                game.player.alive = true;
+            }
+            else {
+                game.game_over = true;
+                game.player.alive = false;
+            }
+            break;
         }
     }
 }
 
+void reset_game() {
+    game = Game{};
+    setup_level();
+    for(auto &b : game.bullets) b.active = false;
+    for(auto &eb : game.enemy_bullets) eb.active = false;
+}
+
 //UPDATE//
 void update(uint32_t time) {
+
+    if(game.game_over) {
+        if(buttons.pressed & Button::A) {
+            reset_game();
+        }
+        return;
+    }
 
     handle_player();
 
