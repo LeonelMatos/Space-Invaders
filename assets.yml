@@ -3,9 +3,10 @@
 # References can be picked up by including assets.hpp
 
 assets.cpp:
+  assets/space_invaders.ttf:
+    name: font_space_inv
+    height: 8
   assets/no-image.png:
     name: asset_no_image
   assets/invaders.png:
     name: sprites_invaders
-  assets/digits.png:
-    name: sprite_digits

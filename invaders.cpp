@@ -3,16 +3,12 @@
 
 using namespace blit;
 
-static  Surface *digits_surf = Surface::load(sprite_digits);
-static const int DIGIT_W = digits_surf->bounds.w / 10;
-static const int DIGIT_H = digits_surf->bounds.h;
-
-static Rect digit_rect(int d) {
-    return Rect{ d * DIGIT_W, 0, DIGIT_W, DIGIT_H};
-}
+extern const uint8_t font_space_inv[];
+static Font space_font{ font_space_inv };
 
 static Surface *invaders_sheet = Surface::load(sprites_invaders);
 
+//Spritesheet config
 static const int SHEET_W = invaders_sheet->bounds.w;
 static const int SHEET_H = invaders_sheet->bounds.h;
 static const int COLS = 3;
@@ -46,15 +42,6 @@ static const uint16_t SCORE_TABLE[4] {
     30,
     150
 };
-
-void draw_number(uint32_t value, Point pos) {
-    std::string s = std::to_string(value);
-    for (char c : s) {
-        int d = c - '0';
-        screen.blit(digits_surf, digit_rect(d), pos);
-        pos.x += DIGIT_W + 1;
-    }
-}
 
 void init() {
     set_screen_mode(ScreenMode::hires);
@@ -92,11 +79,15 @@ void draw_invaders(int frame) {
 }
 
 void draw_score() {
-    screen.pen = Pen(255,255,255);
-    screen.text("SCORE", minimal_font, Point(5,4));
-    
-    draw_number(game.score, Point(5+6*5, 4));
+    screen.pen = Pen(255, 255, 255);
+    screen.text("SCORE", space_font, Point(5,4), false, TextAlign::top_left);
+    char buf[5];
+    snprintf(buf, sizeof(buf), "%04u", game.score);
 
+    int text_height = space_font.char_h;
+    Point num_pos{5, 4 + text_height + 2};
+
+    screen.text(buf, space_font, num_pos, false, TextAlign::top_left);
 }
 
 void render(uint32_t time) {
@@ -152,8 +143,11 @@ void update(uint32_t time) {
     bool at_edge = false;
     for(auto &inv : game.invaders)
       if(inv.alive && 
-         (inv.pos.x + 8 >= 320 && game.direction == 1 ||
-          inv.pos.x <= 0   && game.direction == -1)) {
+         (
+          (inv.pos.x + 8 >= 320 && game.direction == 1) 
+           ||
+          (inv.pos.x <= 0   && game.direction == -1)
+         )) {
         at_edge = true;
         break;
       }
