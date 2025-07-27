@@ -110,7 +110,8 @@ void render(uint32_t time) {
     screen.pen = Pen(0, 0, 0);
     screen.clear();
 
-    screen.blit(invaders_sheet, SRC_PLAYER, game.player.pos);
+    if(game.player.alive)
+        screen.blit(invaders_sheet, SRC_PLAYER, game.player.pos);
     
     //Invaders
     int frame = (time / 300) % 2;
@@ -149,18 +150,18 @@ void handle_player() {
 }
 
 void bullets_physics(uint32_t time) {
-    int player_bullet_speed = 4;
-    int enemy_bullet_speed = 2;
+    int player_bullet_dist = 4;
+    int enemy_bullet_dist = 4;
     //Moving PLAYER bullets
     for(auto &b : game.bullets) {
         if(b.active) {
-            b.pos.y -= player_bullet_speed;
+            b.pos.y -= player_bullet_dist;
             if(b.pos.y < 0) b.active = false;
         }
     }
     //ENEMY bullets
     static uint32_t last_enemy_shot = 0;
-    constexpr int shoot_freq_ms = 800;
+    constexpr int shoot_freq_ms = 100;
     if(time - last_enemy_shot > shoot_freq_ms) {
         last_enemy_shot = time;
         //find the lowest invader in each column (the ones that can shoot)
@@ -188,10 +189,9 @@ void bullets_physics(uint32_t time) {
                 }
             }
         }
-
         for (auto &eb : game.enemy_bullets) {
             if(!eb.active) continue;
-            eb.pos.y += enemy_bullet_speed;
+            eb.pos.y += enemy_bullet_dist;
             if(eb.pos.y > screen.bounds.h)
                 eb.active = false;
         }
@@ -212,6 +212,14 @@ void handle_collisions() {
                 }
                 break;
             }
+        }
+    }
+    Rect player_rect{ game.player.pos, Size(16,8) };
+    for(auto &eb : game.enemy_bullets) {
+        if(!eb.active) continue;
+        if(player_rect.contains(eb.pos)) {
+            eb.active = false;
+            game.player.alive = false;
         }
     }
 }
