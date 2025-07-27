@@ -111,14 +111,9 @@ void draw_enemy_bullets(uint32_t time) {
 
 void draw_lives() {
     screen.pen = Pen(255,255,255);
-
-    const char *label = "LIVES";
-    int fh = space_font.char_h; //font height
-    int pad = 10;
-    
     int x0 = (screen.bounds.w / 2), y0 = 4;
 
-    screen.text(label, space_font, Point(x0, y0), false, TextAlign::top_left);
+    screen.text("LIVES", space_font, Point(x0, y0), false, TextAlign::top_left);
 
     Point p{ x0, y0 + space_font.char_h + 2 };
     for (int i = 0; i < game.lives; i++) {
@@ -280,14 +275,11 @@ void reset_game() {
 
 //UPDATE//
 void update(uint32_t time) {
-
     if(game.game_over) {
-        if(buttons.pressed & Button::A) {
+        if(buttons.pressed & Button::A)
             reset_game();
-        }
         return;
     }
-
     handle_player();
 
     if(time - game.last_move_time > 500) {
@@ -311,7 +303,6 @@ void update(uint32_t time) {
         if(at_edge) inv.pos.y += 8;
       }
     }
-
     if(at_edge) game.direction *= -1;
     game.last_move_time = time;
     }
