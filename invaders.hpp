@@ -9,16 +9,24 @@ constexpr bool DEBUG = false;
 constexpr int PLAYER_LIVES = 3;
 constexpr int INVADERS_NUM = 55;
 
+constexpr uint32_t EXPLOSION_TIME =   250; //ms
+constexpr uint32_t P_EXPLOSION_TIME = 1500;
+
 struct Player {
-  Point   pos;
-  bool    alive{ true };
+  Point     pos;
+  bool      alive{ true };
+  bool      exploding{ false };
+  uint32_t  explode_start{ 0 };
 };
 
 struct Invader {
-  Point   pos;
-  bool    alive{ true };
-  uint8_t type; //0,1,2
-  uint8_t col; //0..10 column pos
+  Point     pos;
+  bool      alive{ true };
+  uint8_t   type; //0,1,2
+  uint8_t   col; //0..10 column pos
+  bool      exploding{ false };
+  uint32_t  explode_start{ 0 };
+
 };
 
 struct Bullet {

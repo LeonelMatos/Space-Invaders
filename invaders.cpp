@@ -36,6 +36,9 @@ static const Rect SRC_A1_F1   = cell_rect(2, 1);
 static const Rect SRC_A2_F0   = cell_rect(1, 2);
 static const Rect SRC_A2_F1   = cell_rect(2, 2);
 
+static const Rect EXP_ALIEN  = cell_rect(0, 1);
+static const Rect EXP_PLAYER = cell_rect(0, 2);
+
 static const uint16_t SCORE_TABLE[4] {
     10,
     20,
@@ -43,12 +46,16 @@ static const uint16_t SCORE_TABLE[4] {
     150
 };
 
+void reset_player_pos() {
+    game.player.pos = { 160 - CELL_W/2, 210 };
+}
+
 void setup_level() {
     game.game_over = false;
     game.wave_cleared = false;
     game.lives = PLAYER_LIVES;
 
-    game.player.pos = { 160 - CELL_W/2, 210 };
+    reset_player_pos();
     game.player.alive = true;
 
     for (int y=0; y<5; y++) {
@@ -75,7 +82,19 @@ void init() {
 
 // RENDERING FUNCTIONS // 
 
-void draw_invaders(int frame) {
+void draw_player(uint32_t time) {
+    if(game.player.exploding) {
+        screen.blit(invaders_sheet, EXP_PLAYER, game.player.pos);
+        if(time - game.player.explode_start > P_EXPLOSION_TIME) {
+            game.player.exploding = false;
+        }
+    }
+    else if(game.player.alive)
+        screen.blit(invaders_sheet, SRC_PLAYER, game.player.pos);
+
+}
+
+void draw_invaders(int frame, uint32_t time) {
     for(auto &inv : game.invaders) {
         if (!inv.alive) continue;
     
@@ -86,6 +105,15 @@ void draw_invaders(int frame) {
             case 1: src = (frame==0 ? &SRC_A1_F0 : &SRC_A1_F1); break;
             case 2: src = (frame==0 ? &SRC_A2_F0 : &SRC_A2_F1); break;
         }
+
+        if (inv.exploding) {
+            src = &EXP_ALIEN;
+            if (time - inv.explode_start > EXPLOSION_TIME) {
+                inv.exploding = false;
+                inv.alive = false;
+            }
+        }
+
     
         screen.blit(invaders_sheet, *src, inv.pos);
     }
@@ -155,12 +183,11 @@ void render(uint32_t time) {
         return;
     }
 
-    if(game.player.alive)
-        screen.blit(invaders_sheet, SRC_PLAYER, game.player.pos);
+    draw_player(time);
     
     //Invaders
     int frame = (time / 300) % 2;
-    draw_invaders(frame);
+    draw_invaders(frame, time);
 
     //PLAYER Bullets
     screen.pen = Pen(255, 255, 255);
@@ -197,6 +224,7 @@ void finish_current_wave() {
 
 
 void handle_player() {
+    if(game.player.exploding) return;
     //player movement
     if (buttons & Button::DPAD_LEFT)
         game.player.pos.x = std::clamp(game.player.pos.x - 2L, 0L, (long)screen.bounds.w - CELL_W); //left
@@ -265,7 +293,7 @@ void bullets_physics(uint32_t time) {
     }
 }
 
-void handle_collisions() {
+void handle_collisions(uint32_t time) {
     for(auto &b : game.bullets) {
         if(!b.active) continue;
 
@@ -290,9 +318,13 @@ void handle_collisions() {
         //collision: bullets at aliens
         for(auto &inv : game.invaders) {
             if(inv.alive && Rect(inv.pos, Size(CELL_W, CELL_H)).contains(b.pos)) {
-                inv.alive = false;
                 b.active = false;
-
+                //Still alive to catch inv on next draw render
+                //alive = false after finishing last draw aliens loop
+                //inv.alive = false;
+                inv.exploding = true;
+                inv.explode_start = time;
+            
                 if (inv.type < 3) {
                     game.score += SCORE_TABLE[inv.type];
                 }
@@ -306,6 +338,8 @@ void handle_collisions() {
         if(player_rect.contains(eb.pos)) {
             eb.active = false;
             game.lives--;
+            game.player.exploding = true;
+            game.player.explode_start = time;
             if(game.lives > 0) {
                 game.player.alive = true;
             }
@@ -376,7 +410,7 @@ void update(uint32_t time) {
 
     bullets_physics(time);
 
-    handle_collisions();
+    handle_collisions(time);
 
 
 }
