@@ -1,6 +1,8 @@
 # Space Invaders
 
-![Build](https://github.com/32blit/32blit-boilerplate/workflows/Build/badge.svg)
+<img width="35%" height="35%" alt="Screenshot From 2025-08-10 18-52-03" src="https://github.com/user-attachments/assets/33d86e36-b68e-4988-adba-f1288ae45247" />
+
+
 
 Implementing the game Space Invaders on PicoSystem.
 
