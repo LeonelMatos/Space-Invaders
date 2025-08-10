@@ -4,6 +4,11 @@
 
 using namespace blit;
 
+constexpr bool DEBUG = true;
+
+constexpr int PLAYER_LIVES = 3;
+constexpr int INVADERS_NUM = 55;
+
 struct Player {
   Point   pos;
   bool    alive{ true };
@@ -36,12 +41,14 @@ struct Barrier {
 
 struct Game {
     Player player;
-    std::array<Invader, 55> invaders;
+    std::array<Invader, INVADERS_NUM> invaders;
     std::array<Bullet, 4> bullets;
     std::array<EnemyBullet, 5> enemy_bullets;
     uint32_t last_move_time{ 0 };
     uint32_t score{ 0 };
     int direction{ 1 }; //1=right -1=left
-    int lives{3};
+    int lives{PLAYER_LIVES};
     bool game_over{false};
+    int wave{ 1 }; //current wave
+    bool wave_cleared{ false };
 } game;

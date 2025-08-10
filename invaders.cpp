@@ -44,7 +44,12 @@ static const uint16_t SCORE_TABLE[4] {
 };
 
 void setup_level() {
+    game.game_over = false;
+    game.wave_cleared = false;
+    game.lives = PLAYER_LIVES;
+
     game.player.pos = { 160 - CELL_W/2, 210 };
+    game.player.alive = true;
 
     for (int y=0; y<5; y++) {
         uint8_t row_type;
@@ -67,6 +72,8 @@ void init() {
     set_screen_mode(ScreenMode::hires);
     setup_level();
 }
+
+// RENDERING FUNCTIONS // 
 
 void draw_invaders(int frame) {
     for(auto &inv : game.invaders) {
@@ -123,7 +130,12 @@ void draw_lives() {
 }
 
 void draw_game_over() {
-    std::string msg = "GAME OVER";
+    std::string msg;
+
+    if (game.wave_cleared)
+        msg = "WAVE " + std::to_string(game.wave);
+    else
+        msg = "GAME OVER";
     screen.pen = Pen(255,255,255);
 
     int text_h = space_font.char_h;
@@ -137,7 +149,7 @@ void render(uint32_t time) {
     screen.pen = Pen(0, 0, 0);
     screen.clear();
 
-    if(game.game_over) {
+    if(game.game_over || game.wave_cleared) {
         draw_game_over();
         draw_score();
         return;
@@ -163,6 +175,26 @@ void render(uint32_t time) {
     draw_lives();
     
 }
+
+// GAME LOGIC FUNCTIONS //
+
+bool all_invaders_destroyed() {
+    for(const auto &inv : game.invaders) {
+        if(inv.alive) return false;
+    }
+    return true;
+}
+
+//checks the gives invader, adds a buffer to surpass a little
+bool invaders_reached_player(const Invader &inv, int buffer = 15) {
+    return inv.alive && (inv.pos.y + CELL_H >= game.player.pos.y + buffer);
+}
+
+void finish_current_wave() {
+    game.wave_cleared = true;
+    game.wave++;
+}
+
 
 void handle_player() {
     //player movement
@@ -194,6 +226,7 @@ void bullets_physics(uint32_t time) {
         }
     }
     //ENEMY bullets
+    if(DEBUG) return;
     static uint32_t last_enemy_shot = 0;
     constexpr int shoot_freq_ms = 100;
     if(time - last_enemy_shot > shoot_freq_ms) {
@@ -264,6 +297,9 @@ void handle_collisions() {
             break;
         }
     }
+    //Wave completion check
+    if(all_invaders_destroyed())
+        finish_current_wave();
 }
 
 void reset_game() {
@@ -273,11 +309,21 @@ void reset_game() {
     for(auto &eb : game.enemy_bullets) eb.active = false;
 }
 
+void start_new_wave() {
+    setup_level();
+    for(auto &b : game.bullets) b.active = false;
+    for(auto &eb : game.enemy_bullets) eb.active = false;
+}
+
 //UPDATE//
 void update(uint32_t time) {
-    if(game.game_over) {
-        if(buttons.pressed & Button::A)
-            reset_game();
+    if(game.game_over || game.wave_cleared) {
+        if(buttons.pressed & Button::A) {
+            if(game.wave_cleared)
+                start_new_wave();
+            else
+                reset_game();
+        }
         return;
     }
     handle_player();
@@ -297,10 +343,15 @@ void update(uint32_t time) {
       }
 
     // shift fleet down + reverse direction if at edge
+    //+ check end contition invaders reached player
     for(auto &inv : game.invaders) {
       if(inv.alive) {
         inv.pos.x += game.direction * 8;
         if(at_edge) inv.pos.y += 8;
+
+        if(invaders_reached_player(inv)) {
+            game.game_over = true;
+        }
       }
     }
     if(at_edge) game.direction *= -1;
