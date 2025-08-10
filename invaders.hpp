@@ -25,6 +25,14 @@ struct EnemyBullet {
   bool active = false;
 };
 
+struct Barrier {
+  static const int width = 5;
+  static const int height = 3;
+
+  blit::Vec2 position;
+  bool chunks[height][width];
+};
+
 struct Game {
     Player player;
     std::array<Invader, 55> invaders;

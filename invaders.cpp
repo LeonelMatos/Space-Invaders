@@ -88,7 +88,7 @@ void draw_score() {
     screen.pen = Pen(255, 255, 255);
     screen.text("SCORE", space_font, Point(5,4), false, TextAlign::top_left);
     char buf[5];
-    snprintf(buf, sizeof(buf), "%04u", game.score);
+    snprintf(buf, sizeof(buf), "%04lu", static_cast<unsigned long>(game.score));
 
     int text_height = space_font.char_h;
     Point num_pos{5, 4 + text_height + 2};

@@ -53,6 +53,12 @@ cmake .. \
   -DPLATFORM=pico
 ```
 
+Make sure you have pico-sdk installed on the parent folder and in it do:
+
+```bash
+git submodule update --init
+```
+
 ### Linux
 
 Build into the folder `build` 
