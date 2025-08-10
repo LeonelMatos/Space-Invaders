@@ -87,7 +87,7 @@ void draw_invaders(int frame) {
 void draw_score() {
     screen.pen = Pen(255, 255, 255);
     screen.text("SCORE", space_font, Point(5,4), false, TextAlign::top_left);
-    char buf[5];
+    char buf[12];
     snprintf(buf, sizeof(buf), "%04lu", static_cast<unsigned long>(game.score));
 
     int text_height = space_font.char_h;
@@ -167,9 +167,9 @@ void render(uint32_t time) {
 void handle_player() {
     //player movement
     if (buttons & Button::DPAD_LEFT)
-        game.player.pos.x = std::clamp(game.player.pos.x - 2L, 0L, 304L); //left
+        game.player.pos.x = std::clamp(game.player.pos.x - 2L, 0L, (long)screen.bounds.w - CELL_W); //left
     if (buttons & Button::DPAD_RIGHT)
-        game.player.pos.x = std::clamp(game.player.pos.x + 2L, 0L, 304L); //right
+        game.player.pos.x = std::clamp(game.player.pos.x + 2L, 0L, (long)screen.bounds.w - CELL_W); //right
 
     //fire
     if ((buttons.pressed & Button::A) && !game.bullets[0].active) {
@@ -237,7 +237,7 @@ void handle_collisions() {
     for(auto &b : game.bullets) {
         if(!b.active) continue;
         for(auto &inv : game.invaders) {
-            if(inv.alive && Rect(inv.pos, Size(16,8)).contains(b.pos)) {
+            if(inv.alive && Rect(inv.pos, Size(CELL_W, CELL_H)).contains(b.pos)) {
                 inv.alive = false;
                 b.active = false;
 

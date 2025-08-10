@@ -1,5 +1,6 @@
 #include "32blit.hpp"
 #include <array>
+#include <cstdio>
 
 using namespace blit;
 
