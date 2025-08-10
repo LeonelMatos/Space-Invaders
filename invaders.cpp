@@ -319,10 +319,7 @@ void start_new_wave() {
 void update(uint32_t time) {
     if(game.game_over || game.wave_cleared) {
         if(buttons.pressed & Button::A) {
-            if(game.wave_cleared)
-                start_new_wave();
-            else
-                reset_game();
+            game.game_over ? reset_game() : start_new_wave();
         }
         return;
     }

@@ -4,7 +4,7 @@
 
 using namespace blit;
 
-constexpr bool DEBUG = true;
+constexpr bool DEBUG = false;
 
 constexpr int PLAYER_LIVES = 3;
 constexpr int INVADERS_NUM = 55;
