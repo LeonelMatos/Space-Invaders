@@ -364,7 +364,7 @@ void reset_game() {
 void start_new_wave() {
     setup_level();
     //proportional invader speed by +10% each time
-    game.invader_speed = std::max(INVADER_MIN_SPEED, static_cast<unsigned>(game.invader_speed * INV_SPEED_INCR));
+    game.invader_speed = std::max(static_cast<uint32_t>(INVADER_MIN_SPEED), static_cast<uint32_t>(game.invader_speed * INV_SPEED_INCR));
     for(auto &b : game.bullets) b.active = false;
     for(auto &eb : game.enemy_bullets) eb.active = false;
 }
