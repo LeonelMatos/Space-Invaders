@@ -266,9 +266,28 @@ void bullets_physics(uint32_t time) {
 }
 
 void handle_collisions() {
-    //collision: bullets at aliens
     for(auto &b : game.bullets) {
         if(!b.active) continue;
+
+        //collision: bullets at bullets
+        bool bullet_destroyed = false;
+        for(auto &eb : game.enemy_bullets) {
+            if(!eb.active) continue;
+
+            Rect b_rect{ b.pos, Size(2,4) };
+            Rect eb_rect{ eb.pos, Size(2,4) };
+
+            if(b_rect.intersects(eb_rect)) {
+                b.active = false;
+                eb.active = false;
+                bullet_destroyed = true;
+                break;
+            }
+        }
+
+        if(bullet_destroyed) continue;
+
+        //collision: bullets at aliens
         for(auto &inv : game.invaders) {
             if(inv.alive && Rect(inv.pos, Size(CELL_W, CELL_H)).contains(b.pos)) {
                 inv.alive = false;
