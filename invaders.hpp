@@ -8,6 +8,9 @@ constexpr bool DEBUG = false;
 
 constexpr int PLAYER_LIVES = 3;
 constexpr int INVADERS_NUM = 55;
+constexpr uint32_t INVADER_DEF_SPEED = 500; //ms
+constexpr uint32_t INVADER_MIN_SPEED = 150;
+constexpr float INV_SPEED_INCR = 0.9f;
 
 constexpr uint32_t EXPLOSION_TIME =   250; //ms
 constexpr uint32_t P_EXPLOSION_TIME = 1500;
@@ -52,6 +55,7 @@ struct Game {
     std::array<Invader, INVADERS_NUM> invaders;
     std::array<Bullet, 4> bullets;
     std::array<EnemyBullet, 5> enemy_bullets;
+    uint32_t invader_speed{ INVADER_DEF_SPEED };
     uint32_t last_move_time{ 0 };
     uint32_t score{ 0 };
     int direction{ 1 }; //1=right -1=left

@@ -113,7 +113,6 @@ void draw_invaders(int frame, uint32_t time) {
                 inv.alive = false;
             }
         }
-
     
         screen.blit(invaders_sheet, *src, inv.pos);
     }
@@ -364,6 +363,8 @@ void reset_game() {
 
 void start_new_wave() {
     setup_level();
+    //proportional invader speed by +10% each time
+    game.invader_speed = std::max(INVADER_MIN_SPEED, static_cast<unsigned>(game.invader_speed * INV_SPEED_INCR));
     for(auto &b : game.bullets) b.active = false;
     for(auto &eb : game.enemy_bullets) eb.active = false;
 }
@@ -378,7 +379,7 @@ void update(uint32_t time) {
     }
     handle_player();
 
-    if(time - game.last_move_time > 500) {
+    if(time - game.last_move_time > game.invader_speed) {
     // check if any edge of the fleet would hit the screen edge
     bool at_edge = false;
     for(auto &inv : game.invaders)
