@@ -122,4 +122,4 @@ The file should copy over, and your PicoSystem should automatically reboot into 
 
 ## Author
 
-- [@leonelmatos](https://www.github.com/LeonelMatos)
+- [@leonelmatos](www.linkedin.com/in/leonel-matos)
