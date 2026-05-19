@@ -9,8 +9,18 @@ Implementing the game Space Invaders on PicoSystem.
 It's based on the original `template` project from the 
 [32blit beta](https://github.com/pimoroni/32blit-beta).
 
+## Install
 
-## Building
+You can install the lastest **0.0.3** version release here and just play. In Linux, make sure to install **libsdl2**, and don't forget to change the _invaders-lin_ file to executable:
+
+```bash
+sudo apt update
+sudo apt install libsdl2-net-2.0-0
+
+chmod +x ./invaders-lin
+```
+
+## Build
 
 ### Requirements
 
